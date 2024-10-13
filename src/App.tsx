@@ -1,59 +1,48 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
+import RecipeTagList from './RecipeTagList';
+import RecipeList from './RecipeList';
+import { IRecipe } from './Recipe';
 
-const App = () => {
+const App: React.FC = () => {
   const [tags, setTags] = useState<string[]>([]);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [recipes, setRecipes] = useState<any[]>([]);
-
+  const [recipes, setRecipes] = useState<IRecipe[]>([]);
 
   useEffect(() => {
-    fetch("https://dummyjson.com/recipes/tags")
-      .then((response) => response.json())
-      .then((data) => setTags(data));
+    // Fetch recipe tags when the app loads
+    fetch('https://dummyjson.com/recipes/tags')
+      .then(response => response.json())
+      .then(data => setTags(data));
   }, []);
 
- 
   useEffect(() => {
     if (selectedTag) {
+      // Fetch recipes for the selected tag
       fetch(`https://dummyjson.com/recipes/tag/${selectedTag}`)
-        .then((response) => response.json())
-        .then((data) => {
-          console.log("Fetched recipes data: ", data);  
-          setRecipes(data.recipes || []); 
-        })
-        .catch((error) => {
-          console.error("Error fetching recipes:", error);
-        });
+        .then(response => response.json())
+        .then(data => setRecipes(data.recipes));
     }
   }, [selectedTag]);
+
+  const handleTagSelect = (tag: string) => {
+    setSelectedTag(tag);
+  };
+
+  const handleBackToTags = () => {
+    setSelectedTag(null);
+    setRecipes([]);
+  };
 
   return (
     <div>
       <h1>ACME Recipe O'Master</h1>
-      {!selectedTag ? (
-        <div>
-          <h2>Recipe Tags</h2>
-          <ul>
-            {tags.map((tag) => (
-              <li key={tag} onClick={() => setSelectedTag(tag)}>
-                {tag}
-              </li>
-            ))}
-          </ul>
-        </div>
+      {selectedTag ? (
+        <>
+          <button onClick={handleBackToTags}>Back to Tag List</button>
+          <RecipeList recipes={recipes} />
+        </>
       ) : (
-        <div>
-          <h2>Recipes for {selectedTag}</h2>
-          <button onClick={() => setSelectedTag(null)}>Back to Tags</button>
-          <ul>
-            {recipes.map((recipe, index) => (
-              <li key={index}>
-                <h3>{recipe.name}</h3>
-                <p>{recipe.description}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <RecipeTagList tagList={tags} onSelectTag={handleTagSelect} />
       )}
     </div>
   );
